@@ -58,8 +58,8 @@
             <input type="file" id="tinyUpload" accept=".pdf" multiple>
             <div id="fileList" class="file-list text-start"></div>
             <div id="errorMessage" class="error-message">Formato de Arquivo inválido</div>
-            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Colocar páginas adicionais ao(s) Pdf(s)</button>
-            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Mesclados (ao apertar aguarde)</a>
+            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Mesclar PDFs</button>
+            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Mesclados</a>
         </div>
     </div>
 
@@ -70,171 +70,174 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js"></script>
 
     <script>
-        const uploadBox = document.querySelector('.upload-box');
-        const fileInput = document.getElementById('tinyUpload');
-        const fileList = document.getElementById('fileList');
-        const errorMessage = document.getElementById('errorMessage');
-        const mergeButton = document.getElementById('mergeButton');
-        const downloadLink = document.getElementById('downloadLink');
-        let filesArray = [];
+ const uploadBox = document.querySelector('.upload-box');
+const fileInput = document.getElementById('tinyUpload');
+const fileList = document.getElementById('fileList');
+const errorMessage = document.getElementById('errorMessage');
+const mergeButton = document.getElementById('mergeButton');
+const downloadLink = document.getElementById('downloadLink');
+let filesArray = [];
 
-        fileInput.addEventListener('change', () => {
-            addFiles(fileInput.files);
-            fileInput.value = ''; // Limpa o input para permitir adicionar o mesmo arquivo novamente
-        });
+fileInput.addEventListener('change', () => {
+    addFiles(fileInput.files);
+    fileInput.value = ''; // Limpa o input para permitir adicionar o mesmo arquivo novamente
+});
 
-        uploadBox.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadBox.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-        });
+uploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBox.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+});
 
-        uploadBox.addEventListener('dragleave', () => {
-            uploadBox.style.backgroundColor = 'transparent';
-        });
+uploadBox.addEventListener('dragleave', () => {
+    uploadBox.style.backgroundColor = 'transparent';
+});
 
-        uploadBox.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadBox.style.backgroundColor = 'transparent';
-            addFiles(e.dataTransfer.files);
-        });
+uploadBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBox.style.backgroundColor = 'transparent';
+    addFiles(e.dataTransfer.files);
+});
 
-        function addFiles(files) {
-            let invalidFileFound = false;
-            for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-                if (file.type === "application/pdf") {
-                    file = renameFileIfDuplicate(file);
-                    filesArray.push(file);
-                } else {
-                    invalidFileFound = true;
-                }
-            }
-            if (invalidFileFound) {
-                showError();
-            }
-            updateFileList();
+function addFiles(files) {
+    let invalidFileFound = false;
+    for (let i = 0; i < files.length; i++) {
+        let file = files[i];
+        if (file.type === "application/pdf") {
+            file = renameFileIfDuplicate(file);
+            filesArray.push(file);
+        } else {
+            invalidFileFound = true;
         }
+    }
+    if (invalidFileFound) {
+        showError();
+    }
+    updateFileList();
+}
 
-        function renameFileIfDuplicate(file) {
-            let fileName = file.name;
-            const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
-            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+function renameFileIfDuplicate(file) {
+    let fileName = file.name;
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+    fileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-            let counter = 1;
-            while (filesArray.find(f => f.name === `${fileName}${counter > 1 ? `(${counter})` : ''}${fileExtension}`)) {
-                counter++;
-            }
+    let counter = 1;
+    while (filesArray.find(f => f.name === `${fileName}${counter > 1 ? `(${counter})` : ''}${fileExtension}`)) {
+        counter++;
+    }
 
-            if (counter > 1) {
-                const newFileName = `${fileName}(${counter})${fileExtension}`;
-                const renamedFile = new File([file], newFileName, { type: file.type });
-                return renamedFile;
-            }
+    if (counter > 1) {
+        const newFileName = `${fileName}(${counter})${fileExtension}`;
+        const renamedFile = new File([file], newFileName, { type: file.type });
+        return renamedFile;
+    }
 
-            return file;
-        }
+    return file;
+}
 
-        function showError() {
-            errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 3000); // A mensagem de erro desaparecerá após 3 segundos
-        }
+function showError() {
+    errorMessage.style.display = 'block';
+    setTimeout(() => {
+        errorMessage.style.display = 'none';
+    }, 3000); // A mensagem de erro desaparecerá após 3 segundos
+}
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            filesArray.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.classList.add('file-item');
-                fileItem.innerHTML = `
-                    <span><i class="fas fa-file-pdf"></i> ${file.name}</span>
-                    <i class="fas fa-trash-alt remove-btn" onclick="removeFile(${index})"></i>
-                `;
-                fileList.appendChild(fileItem);
-            });
-            mergeButton.style.display = filesArray.length > 0 ? 'inline-block' : 'none';
-        }
+function updateFileList() {
+    fileList.innerHTML = '';
+    filesArray.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+        fileItem.innerHTML = `
+            <span><i class="fas fa-file-pdf"></i> ${file.name}</span>
+            <i class="fas fa-trash-alt remove-btn" onclick="removeFile(${index})"></i>
+        `;
+        fileList.appendChild(fileItem);
+    });
+    mergeButton.style.display = filesArray.length > 0 ? 'inline-block' : 'none';
+}
 
-        function removeFile(index) {
-            filesArray.splice(index, 1);
-            updateFileList();
-        }
+function removeFile(index) {
+    filesArray.splice(index, 1);
+    updateFileList();
+}
 
-        mergeButton.addEventListener('click', async function (e) {
-            e.preventDefault();
+mergeButton.addEventListener('click', async function (e) {
+    e.preventDefault();
 
-            if (filesArray.length === 0) {
-                alert("Por favor, selecione pelo menos um arquivo PDF.");
-                return;
-            }
+    if (filesArray.length === 0) {
+        alert("Por favor, selecione pelo menos um arquivo PDF.");
+        return;
+    }
 
-            // URL do segundo PDF fixo
-            const pdf2Url = 'https://cdn.shopify.com/s/files/1/0855/5908/3296/files/dddProposta_Comercial.pdf?v=1725037426';
-            const pdf2Response = await fetch(pdf2Url);
-            const pdf2Bytes = await pdf2Response.arrayBuffer();
-            const pdf2Doc = await PDFLib.PDFDocument.load(pdf2Bytes);
+    // Adiciona o spinner ao botão de mesclar
+    mergeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mesclando...';
+    mergeButton.disabled = true;
 
-            if (filesArray.length === 1) {
-                const pdfBytes = await filesArray[0].arrayBuffer();
+    try {
+        // URL do segundo PDF fixo
+        const pdf2Url = 'https://cdn.shopify.com/s/files/1/0855/5908/3296/files/dddProposta_Comercial.pdf?v=1725037426';
+        const pdf2Response = await fetch(pdf2Url);
+        const pdf2Bytes = await pdf2Response.arrayBuffer();
+        const pdf2Doc = await PDFLib.PDFDocument.load(pdf2Bytes);
+
+        if (filesArray.length === 1) {
+            const pdfBytes = await filesArray[0].arrayBuffer();
+            const pdf1Doc = await PDFLib.PDFDocument.load(pdfBytes);
+
+            const pdfDoc = await PDFLib.PDFDocument.create();
+            const pages1 = await pdfDoc.copyPages(pdf1Doc, pdf1Doc.getPageIndices());
+            pages1.forEach(page => pdfDoc.addPage(page));
+
+            const pages2 = await pdfDoc.copyPages(pdf2Doc, pdf2Doc.getPageIndices());
+            pages2.forEach(page => pdfDoc.addPage(page));
+
+            const mergedPdfBytes = await pdfDoc.save();
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+
+            const originalFileName = filesArray[0].name.replace('.pdf', '');
+            const newFileName = `Mesclado_${originalFileName}.pdf`;
+
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = newFileName;
+            downloadLink.style.display = 'block';
+            downloadLink.textContent = 'Download PDF Mesclado';
+        } else {
+            let zip = new JSZip();
+            for (const file of filesArray) {
+                const pdfBytes = await file.arrayBuffer();
                 const pdf1Doc = await PDFLib.PDFDocument.load(pdfBytes);
-                
+
                 const pdfDoc = await PDFLib.PDFDocument.create();
                 const pages1 = await pdfDoc.copyPages(pdf1Doc, pdf1Doc.getPageIndices());
                 pages1.forEach(page => pdfDoc.addPage(page));
-                
+
                 const pages2 = await pdfDoc.copyPages(pdf2Doc, pdf2Doc.getPageIndices());
                 pages2.forEach(page => pdfDoc.addPage(page));
-                
+
                 const mergedPdfBytes = await pdfDoc.save();
                 const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
 
-                const originalFileName = filesArray[0].name.replace('.pdf', '');
+                const originalFileName = file.name.replace('.pdf', '');
                 const newFileName = `Mesclado_${originalFileName}.pdf`;
 
-                const url = URL.createObjectURL(blob);
-                downloadLink.href = url;
-                downloadLink.download = newFileName;
-                downloadLink.style.display = 'block';
-                downloadLink.textContent = 'Download PDF Mesclado';
-            } else {
-                let zip = new JSZip();
-                for (const file of filesArray) {
-                    const pdfBytes = await file.arrayBuffer();
-                    const pdf1Doc = await PDFLib.PDFDocument.load(pdfBytes);
-                    
-                    const pdfDoc = await PDFLib.PDFDocument.create();
-                    const pages1 = await pdfDoc.copyPages(pdf1Doc, pdf1Doc.getPageIndices());
-                    pages1.forEach(page => pdfDoc.addPage(page));
-                    
-                    const pages2 = await pdfDoc.copyPages(pdf2Doc, pdf2Doc.getPageIndices());
-                    pages2.forEach(page => pdfDoc.addPage(page));
-                    
-                    const mergedPdfBytes = await pdfDoc.save();
-                    const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
-
-                                       const originalFileName = file.name.replace('.pdf', '');
-                    const newFileName = `Mesclado_${originalFileName}.pdf`;
-
-                    zip.file(newFileName, blob);
-                }
-
-                const zipBlob = await zip.generateAsync({ type: 'blob' });
-                const zipUrl = URL.createObjectURL(zipBlob);
-                downloadLink.href = zipUrl;
-                downloadLink.download = 'PDFs_Mesclados.zip';
-                downloadLink.style.display = 'block';
-                downloadLink.textContent = 'Download PDFs Mesclados (ZIP)';
+                zip.file(newFileName, blob);
             }
-        });
-      
-      // Adiciona o spinner ao botão de mesclar
-mergeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mesclando...';
-mergeButton.disabled = true;
 
-// Remove o spinner e reativa o botão
-mergeButton.innerHTML = 'Mesclar PDFs';
-mergeButton.disabled = false;
-
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipUrl = URL.createObjectURL(zipBlob);
+            downloadLink.href = zipUrl;
+            downloadLink.download = 'PDFs_Mesclados.zip';
+            downloadLink.style.display = 'block';
+            downloadLink.textContent = 'Download PDFs Mesclados (ZIP)';
+        }
+    } catch (error) {
+        console.error("Erro ao mesclar PDFs: ", error);
+    } finally {
+        // Remove o spinner e reativa o botão após o processamento
+        mergeButton.innerHTML = 'Mesclar PDFs';
+        mergeButton.disabled = false;
+    }
+});
     </script>
 </body>
 </html>
