@@ -14,7 +14,6 @@
             border-radius: 10px;
             cursor: pointer;
             transition: background-color 0.3s;
-            box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.2);
         }
         .upload-box:hover {
             background-color: rgba(255, 255, 255, 0.1);
@@ -41,6 +40,11 @@
             color: red;
             cursor: pointer;
         }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -49,12 +53,13 @@
             <div class="upload-box d-flex flex-column align-items-center" onclick="document.getElementById('tinyUpload').click();">
                 <i class="fas fa-upload fa-3x mb-4"></i>
                 <h5>Faça o upload ou arraste os PDFs do Tiny</h5>
-                <p class="mb-0">É possível adicionar vários PDFs para a adição de <br>páginas de proposta da Stellar Print em lote.</p>
+                <p class="mb-0">É possível adicionar vários PDFs para mesclagem em lote.</p>
             </div>
-            <input type="file" id="tinyUpload" accept="application/pdf" multiple>
+            <input type="file" id="tinyUpload" accept=".pdf" multiple>
             <div id="fileList" class="file-list text-start"></div>
-            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Colocar páginas Adicionais</button>
-            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Modificado</a>
+            <div id="errorMessage" class="error-message">Formato de Arquivo inválido</div>
+            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Mesclar PDFs</button>
+            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Mesclados</a>
         </div>
     </div>
 
@@ -68,6 +73,7 @@
         const uploadBox = document.querySelector('.upload-box');
         const fileInput = document.getElementById('tinyUpload');
         const fileList = document.getElementById('fileList');
+        const errorMessage = document.getElementById('errorMessage');
         const mergeButton = document.getElementById('mergeButton');
         const downloadLink = document.getElementById('downloadLink');
         let filesArray = [];
@@ -93,10 +99,18 @@
         });
 
         function addFiles(files) {
+            let invalidFileFound = false;
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                file = renameFileIfDuplicate(file);
-                filesArray.push(file);
+                if (file.type === "application/pdf") {
+                    file = renameFileIfDuplicate(file);
+                    filesArray.push(file);
+                } else {
+                    invalidFileFound = true;
+                }
+            }
+            if (invalidFileFound) {
+                showError();
             }
             updateFileList();
         }
@@ -118,6 +132,13 @@
             }
 
             return file;
+        }
+
+        function showError() {
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 3000); // A mensagem de erro desaparecerá após 3 segundos
         }
 
         function updateFileList() {
@@ -191,7 +212,7 @@
                     const mergedPdfBytes = await pdfDoc.save();
                     const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
 
-                    const originalFileName = file.name.replace('.pdf', '');
+                                       const originalFileName = file.name.replace('.pdf', '');
                     const newFileName = `Mesclado_${originalFileName}.pdf`;
 
                     zip.file(newFileName, blob);
@@ -205,6 +226,15 @@
                 downloadLink.textContent = 'Download PDFs Mesclados (ZIP)';
             }
         });
+      
+      // Adiciona o spinner ao botão de mesclar
+mergeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mesclando...';
+mergeButton.disabled = true;
+
+// Remove o spinner e reativa o botão
+mergeButton.innerHTML = 'Mesclar PDFs';
+mergeButton.disabled = false;
+
     </script>
 </body>
 </html>
