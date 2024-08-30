@@ -58,8 +58,8 @@
             <input type="file" id="tinyUpload" accept=".pdf" multiple>
             <div id="fileList" class="file-list text-start"></div>
             <div id="errorMessage" class="error-message">Formato de Arquivo inválido</div>
-            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Mesclar PDFs</button>
-            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Mesclados</a>
+            <button type="submit" class="btn btn-primary mt-4" id="mergeButton" style="display: none;">Adicionar páginas PDFs</button>
+            <a id="downloadLink" class="btn btn-success mt-4" style="display: none;">Download PDFs Atualizados</a>
         </div>
     </div>
 
@@ -169,7 +169,7 @@ mergeButton.addEventListener('click', async function (e) {
     }
 
     // Adiciona o spinner ao botão de mesclar
-    mergeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mesclando...';
+    mergeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adicionando Páginas...';
     mergeButton.disabled = true;
 
     try {
